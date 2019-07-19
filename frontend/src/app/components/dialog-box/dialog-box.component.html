@@ -1,0 +1,25 @@
+<h1 mat-dialog-title>
+  Action: <strong>{{ action }}</strong>
+</h1>
+<div mat-dialog-content>
+  <div *ngIf="action != 'Delete'; else elseTemplate">
+    <mat-form-field>
+      <input placeholder="Name" matInput [(ngModel)]="localData.name" />
+    </mat-form-field>
+    <mat-form-field>
+      <input placeholder="Address" matInput [(ngModel)]="localData.address" />
+    </mat-form-field>
+  </div>
+  <ng-template #elseTemplate>
+    Sure to delete <b>{{ localData.name }}</b
+    >?
+  </ng-template>
+</div>
+<div mat-dialog-actions>
+  <button mat-button mat-flat-button color="primary" (click)="doAction()">
+    {{ action }}
+  </button>
+  <button mat-button (click)="closeDialog()" mat-flat-button color="warn">
+    Cancel
+  </button>
+</div>

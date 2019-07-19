@@ -1,0 +1,52 @@
+mutation($owner: ownerInput!) {
+  createOwner(owner: $owner) {
+    id
+    name
+    address
+  }
+}
+
+{
+    "owner": {
+        "name": "random owner",
+        "address": "random address"
+    }
+}
+
+
+mutation ($owner: ownerInput!, $ownerId: ID!) {
+  updateOwner(owner: $owner, ownerId: $ownerId) {
+    id
+    name
+    address
+  }
+}
+
+{
+    "owner": {
+        "name": "random owner",
+        "address": "random address"
+    }
+}
+
+
+mutation ($ownerId: ID!) {
+    deleteOwner(ownerId: $ownerId)
+}
+
+{
+    "ownerId": "D6EA8C37-9D3D-4D80-AF8D-AD289BE2E29A"
+}
+
+
+{
+  owners {
+    id,
+    address,
+    accounts {
+      id,
+      type,
+      description
+    }
+  }
+}
