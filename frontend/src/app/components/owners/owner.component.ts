@@ -1,12 +1,13 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { OwnerType, OwnerInput } from 'src/types';
-import { Subscription } from 'rxjs';
-import { MatDialog, MatTable, MatTableDataSource } from '@angular/material';
+import { Observable } from 'rxjs';
+import { MatDialog, MatTable } from '@angular/material';
 import { DialogBoxComponent } from '../dialog-box/dialog-box.component';
 import { OwnersResponse } from './OwnersResponse';
 import { ActionType } from './ActionType';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-owners',
@@ -14,17 +15,15 @@ import { ActionType } from './ActionType';
   styleUrls: ['owners.component.less']
 })
 
-export class OwnerComponent implements OnInit, OnDestroy {
+export class OwnerComponent implements OnInit {
 
   @ViewChild(MatTable, { static: true }) table: MatTable<any>;
-  owners = new MatTableDataSource<OwnerType>();
+  owners = new Observable<OwnerType[]>();
   loading = false;
   errors: any;
 
   // Workaround for enums to work in Angular templates.
   actionType: typeof ActionType = ActionType;
-
-  private querySubscription: Subscription;
 
   displayedColumns: string[] = ['name', 'address', 'actions'];
 
@@ -43,22 +42,15 @@ export class OwnerComponent implements OnInit, OnDestroy {
     this.getOwners();
   }
 
-  ngOnDestroy() {
-    this.querySubscription.unsubscribe();
-  }
-
   getOwners() {
     this.loading = true;
-    this.querySubscription = this.apollo
+    this.owners = this.apollo
       .watchQuery<OwnersResponse>({ query: this.ownerQuery })
-      .valueChanges.subscribe(result => {
-        this.owners.data = result.data.owners;
-        this.loading = result.loading;
-        this.errors = result.errors;
-      }, (error) => {
-        this.loading = false;
-        this.errors = error.message;
-      });
+      .valueChanges.pipe(map(({ data }) => {
+        this.loading = data.loading;
+        this.errors = data.errors;
+        return data.owners;
+      }));
   }
 
   openDialog(action: ActionType, obj: { action: any; }) {
@@ -107,19 +99,18 @@ export class OwnerComponent implements OnInit, OnDestroy {
       address: ownerToAdd.address
     } as OwnerInput;
 
-    this.apollo.mutate({
+    this.apollo.mutate<any>({
       mutation: createOwner,
       variables: { owner },
-      update: (store, { data: { createOwner } }) => {
+      // tslint:disable-next-line: no-shadowed-variable
+      update: (store, { data: createOwner }) => {
         const data: any = store.readQuery({ query: this.ownerQuery });
-        data.owners.push(createOwner);
+        const createdOwner = createOwner.createOwner;
+        data.owners.push(createdOwner);
         store.writeQuery({ query: this.ownerQuery, data });
       },
-    }).subscribe((data) => {
-      console.log('Owner created: ', data);
-    }, (error) => {
-      console.log('There was an error sending the query', error);
-    });
+    })
+      .subscribe();
   }
 
   updateOwner(ownerToUpdate: OwnerType) {
@@ -156,12 +147,11 @@ export class OwnerComponent implements OnInit, OnDestroy {
 
     const ownerId = owner.id;
 
-    this.apollo.mutate({
+    this.apollo.mutate<any>({
       mutation: deleteOwner,
       variables: { ownerId },
-      update: (store, { data: { deleteOwner } }) => {
+      update: (store, { data: { } }) => {
         const data: any = store.readQuery({ query: this.ownerQuery });
-
         data.owners = data.owners.filter((value: OwnerType) => {
           return value.id !== owner.id;
         });

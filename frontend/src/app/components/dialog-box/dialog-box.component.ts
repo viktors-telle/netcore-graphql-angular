@@ -26,6 +26,6 @@ export class DialogBoxComponent {
     }
 
     closeDialog() {
-        this.dialogRef.close({ action: 'Cancel' });
+        this.dialogRef.close({ action: ActionType.Cancel });
     }
 }
