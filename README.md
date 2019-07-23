@@ -1,4 +1,4 @@
-Prototype to build API using GraphQL (https://graphql.org/).
+Prototype of API using GraphQL (https://graphql.org/).
 
 Front-end is built using Angular 8+.
 
